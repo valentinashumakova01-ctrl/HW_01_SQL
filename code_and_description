@@ -1,0 +1,205 @@
+1. Приведение к Первой Нормальной Форме (1НФ) - все атрибуты в таблице должны быть простыми, а данные на пересечении строк и столбцов должны иметь исключительно скалярные значения.
+
+  Таблицы Customers и Transactions соответствуют 1НФ (поле adress можно было дополнительно разделить на номер и название улицы)
+
+2. Приведение к Второй Нормальной Форме (2НФ) - БД находится в 1НФ, а каждый столбец, который не является ключом, зависит от первичного ключа
+
+  Table Customers {
+  customer_id [pk]
+  first_name
+  last_name
+  gender
+  DOB
+  job_title
+  job_industry_category // Нарушение 2НФ!
+  wealth_segment
+  deceased_indicator
+  owns_car
+  address
+  postcode
+  state                  // Нарушение 2НФ!
+  country                // Нарушение 2НФ!
+  property_valuation
+}
+
+Table Transactions {
+  transaction_id [pk]
+  customer_id [fk]
+  transaction_date
+  online_order
+  order_status
+  product_id
+  brand                  // Нарушение 2НФ!
+  product_line           // Нарушение 2НФ!
+  product_class          // Нарушение 2НФ!
+  product_size           // Нарушение 2НФ!
+  list_price             // Нарушение 2НФ!
+  standard_cost          // Нарушение 2НФ!
+}
+
+Приведение к 2НФ:
+
+Table Customers {
+  customer_id [pk]
+  first_name
+  last_name
+  gender
+  DOB
+  job_title
+  job_industry_category // Нарушение 3НФ! (зависит от job_title)
+  wealth_segment
+  deceased_indicator
+  owns_car
+  address
+  postcode
+  state                  // Нарушение 3НФ! (зависит от postcode)
+  country                // Нарушение 3НФ! (зависит от postcode)
+  property_valuation
+}
+
+3. Приведение к Третьей Нормальной Форме (3НФ) - таблица должна находиться в 2НФ, любой столбец, который не является ключом, должен зависеть лишь от первичного ключа
+
+  Создаем отдельную таблицу Locations, куда заносим state и country, ключем является postcode.
+  Создаем таблицу Job_Industries для 
+  Создаем таблицу Job_Industries, вносим в нее industry_name
+  
+Table Products {
+  product_id [pk]
+  brand
+  product_line
+  product_class
+  product_size
+  list_price
+  standard_cost
+}
+
+Table Transactions {
+  transaction_id [pk]
+  customer_id
+  product_id
+  transaction_date
+  online_order
+  order_status
+}
+
+
+Table Locations {
+  postcode [pk]
+  state
+  country
+}
+
+Table Job_Industries {
+  industry_id [pk]
+  industry_name
+}
+
+Table Products {
+  product_id [pk]
+  brand
+  product_line
+  product_class
+  product_size
+  list_price
+  standard_cost
+}
+
+// Основные сущности
+Table Customers {
+  customer_id [pk]
+  first_name
+  last_name
+  gender
+  DOB
+  wealth_segment
+  deceased_indicator
+  owns_car
+  address
+  postcode [fk] // Ссылка на Locations
+  property_valuation
+}
+
+Table Customer_Jobs { // НОВАЯ ТАБЛИЦА
+  customer_id [pk, fk] // Составной ключ, зависит от бизнес-правил
+  job_title
+  industry_id [fk]
+}
+
+Table Transactions {
+  transaction_id [pk]
+  customer_id [fk]
+  product_id [fk]
+  transaction_date
+  online_order
+  order_status
+}
+
+// Связи
+Ref: Customers.postcode > Locations.postcode
+Ref: Customer_Jobs.customer_id > Customers.customer_id
+Ref: Customer_Jobs.industry_id > Job_Industries.industry_id
+Ref: Transactions.customer_id > Customers.customer_id
+Ref: Transactions.product_id > Products.product_id  
+
+
+
+CREATE TABLE job_industries (
+    industry_id SERIAL PRIMARY KEY,
+    industry_name VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE locations (
+    PRIMARY KEY (postcode, state),
+    postcode VARCHAR(20),
+    state VARCHAR(100) NOT NULL,
+    country VARCHAR(100) NOT null
+);
+
+CREATE TABLE products (
+    product_key SERIAL PRIMARY KEY,
+    product_id INTEGER,
+    brand VARCHAR(100),
+    product_line VARCHAR(100),
+    product_class VARCHAR(50),
+    product_size VARCHAR(50),
+    list_price DECIMAL(12,2),
+    standard_cost DECIMAL(12,2)
+);
+
+CREATE TABLE customers (
+    customer_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    gender VARCHAR(20),
+    DOB DATE,
+    wealth_segment VARCHAR(50),
+    deceased_indicator VARCHAR(10) DEFAULT 'No',
+    owns_car VARCHAR(10) DEFAULT 'No',
+    address TEXT,
+    postcode VARCHAR(20),
+    property_valuation INTEGER
+);
+
+CREATE TABLE customer_jobs (
+    customer_id INTEGER NOT NULL,
+    industry_id INTEGER NOT NULL,
+    job_title VARCHAR(200),
+    
+    PRIMARY KEY (customer_id, industry_id)
+    
+);
+
+CREATE TABLE transactions (
+    transaction_id INTEGER  PRIMARY key,
+    customer_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    transaction_date TIMESTAMP NOT NULL,
+    online_order BOOLEAN default FALSE,
+    order_status VARCHAR(50) NOT NULL,
+    brand VARCHAR(100),
+    product_line VARCHAR(100),
+    product_class VARCHAR(50),
+    product_size VARCHAR(50),
+    list_price DECIMAL(12,2),
+    standard_cost DECIMAL(12,2)
+);
