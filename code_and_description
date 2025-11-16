@@ -11,7 +11,7 @@
   gender
   DOB
   job_title
-  job_industry_category // Нарушение 2НФ!
+  job_industry_category
   wealth_segment
   deceased_indicator
   owns_car
@@ -38,6 +38,8 @@ Table Transactions {
 }
 
 Приведение к 2НФ:
+  Создаем отдельную таблицу Locations, куда заносим state и country, ключем является postcode.
+  Создаем отдельную таблицу Products (product_id не может быть ключом, тк значения не универсальны, поэтому создаем product_key)
 
 Table Customers {
   customer_id [pk]
@@ -51,26 +53,13 @@ Table Customers {
   deceased_indicator
   owns_car
   address
-  postcode
-  state                  // Нарушение 3НФ! (зависит от postcode)
-  country                // Нарушение 3НФ! (зависит от postcode)
   property_valuation
 }
 
-3. Приведение к Третьей Нормальной Форме (3НФ) - таблица должна находиться в 2НФ, любой столбец, который не является ключом, должен зависеть лишь от первичного ключа
-
-  Создаем отдельную таблицу Locations, куда заносим state и country, ключем является postcode.
-  Создаем таблицу Job_Industries для 
-  Создаем таблицу Job_Industries, вносим в нее industry_name
-  
-Table Products {
-  product_id [pk]
-  brand
-  product_line
-  product_class
-  product_size
-  list_price
-  standard_cost
+Table Locations {
+  postcode [pk]
+  state
+  country
 }
 
 Table Transactions {
@@ -82,20 +71,9 @@ Table Transactions {
   order_status
 }
 
-
-Table Locations {
-  postcode [pk]
-  state
-  country
-}
-
-Table Job_Industries {
-  industry_id [pk]
-  industry_name
-}
-
 Table Products {
-  product_id [pk]
+  product_key [pk] - product_id не может быть ключом, тк значения не универсальны, поэтому создаем product_key
+  product_id
   brand
   product_line
   product_class
@@ -104,7 +82,12 @@ Table Products {
   standard_cost
 }
 
-// Основные сущности
+3. Приведение к Третьей Нормальной Форме (3НФ) - таблица должна находиться в 2НФ, любой столбец, который не является ключом, должен зависеть лишь от первичного ключа
+  Создаем справочник Job_Industries  - industry_id: industry_name
+  Создаем таблицу Customer_Jobs 
+
+Приведение к 3НФ:
+
 Table Customers {
   customer_id [pk]
   first_name
@@ -118,11 +101,16 @@ Table Customers {
   postcode [fk] // Ссылка на Locations
   property_valuation
 }
-
-Table Customer_Jobs { // НОВАЯ ТАБЛИЦА
-  customer_id [pk, fk] // Составной ключ, зависит от бизнес-правил
-  job_title
-  industry_id [fk]
+  
+Table Products {
+  product_key [pk, fk] 
+  product_id 
+  brand
+  product_line
+  product_class
+  product_size
+  list_price
+  standard_cost
 }
 
 Table Transactions {
@@ -134,12 +122,30 @@ Table Transactions {
   order_status
 }
 
+Table Locations {
+  postcode [pk]
+  state
+  country
+}
+
+Table Job_Industries {
+  industry_id [pk, fk] 
+  industry_name
+}
+
+Table Customer_Jobs {
+  customer_id [pk, fk]
+  job_title
+  industry_id [fk]
+}
+
+
 // Связи
 Ref: Customers.postcode > Locations.postcode
 Ref: Customer_Jobs.customer_id > Customers.customer_id
 Ref: Customer_Jobs.industry_id > Job_Industries.industry_id
 Ref: Transactions.customer_id > Customers.customer_id
-Ref: Transactions.product_id > Products.product_id  
+Ref: Transactions.product_key > Products.product_key 
 
 
 
